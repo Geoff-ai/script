@@ -1,10 +1,10 @@
 import streamlit as st
-from scripts import analyse_proposition_maillage
+from scripts import maillage_interne
 
 
 # Configuration des pages
 PAGES = {
-    "Analyse + Proposition Maillage": analyse_proposition_maillage
+    "Analyse kefehgie": maillage_interne
 
 }
 
