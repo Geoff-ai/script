@@ -2,6 +2,9 @@ import streamlit as st
 from scripts import maillage_interne
 
 
+
+
+
 # Configuration des pages
 PAGES = {
     "Analyse kefehgie": maillage_interne
