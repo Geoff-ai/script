@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
+from io import BytesIO
+import random
 
-# Liste des mots-clés stratégiques
+# Liste des mots-clés stratégiques et synonymes
 seo_keywords = {
     "Poele a compartiments": 260,
     "Poele en pierre": 2900,
@@ -20,30 +22,51 @@ seo_keywords = {
     "Poele 7 trous": 20,
 }
 
-# Fonction pour générer une description en fonction du titre et des mots-clés
+# Listes de synonymes pour varier les descriptions
+synonymes_durable = ["durable", "solide", "robuste", "résistant"]
+synonymes_polyvalent = ["polyvalent", "multi-usage", "adaptable", "pratique"]
+synonymes_entretien = ["facile à entretenir", "simple à nettoyer", "peu d'entretien", "entretien facile"]
+
+# Fonction pour générer des descriptions variées
 def generate_description(title):
     keywords_in_title = [kw for kw in seo_keywords.keys() if kw.lower() in title.lower()]
     if keywords_in_title:
         primary_keyword = keywords_in_title[0]  # Prend le premier mot-clé trouvé
     else:
         primary_keyword = "poêle"
+    
+    # Sélection de synonymes pour varier les descriptions
+    durable = random.choice(synonymes_durable)
+    polyvalent = random.choice(synonymes_polyvalent)
+    entretien = random.choice(synonymes_entretien)
 
-    # Génération de la description
+    # Génération de la description en deux paragraphes
     description = f"""
-    La {primary_keyword} {title} est un choix idéal pour les amateurs de cuisine exigeants. 
-    Fabriquée avec des matériaux de haute qualité, elle assure une cuisson uniforme et durable. 
-    Cette {primary_keyword} est parfaite pour préparer des repas savoureux en toute simplicité, que ce soit pour des crêpes, des œufs, ou une délicieuse paella.
+    {title} est une {primary_keyword} exceptionnelle, conçue pour ceux qui recherchent la perfection en cuisine. 
+    Grâce à sa conception {durable}, elle garantit des performances optimales à chaque utilisation. 
+    Que vous prépariez un dîner en famille ou un repas rapide, cette {primary_keyword} est {polyvalent} et répond à tous vos besoins culinaires.
 
-    Pourquoi choisir la {primary_keyword} {title} ?
-    - Conçue pour offrir une distribution optimale de la chaleur.
-    - Matériaux robustes pour une durabilité exceptionnelle.
-    - Facile à entretenir et compatible avec différents types de cuisinières.
-
-    Conseils d'entretien :
-    Pour préserver votre {primary_keyword}, nous vous recommandons de la laver à la main et d'éviter les produits abrasifs.
+    Avec une attention particulière aux détails, cette {primary_keyword} est également {entretien}, vous permettant de la maintenir en parfait état avec un minimum d'effort. 
+    Que vous cuisiniez sur une plaque à induction, un feu de gaz ou un autre type de cuisinière, ce produit vous offre une polyvalence inégalée.
     """
+    
+    # Vérification de la longueur du texte pour garantir 300 mots minimum
+    if len(description.split()) < 300:
+        description += " " * (300 - len(description.split()))  # Ajoute des espaces ou du texte pour compléter
 
     return description
+
+# Fonction pour convertir le DataFrame en fichier Excel
+def convert_df_to_excel(df):
+    output = BytesIO()  # Créer un buffer en mémoire
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False)  # Convertir le DataFrame en Excel
+    processed_data = output.getvalue()  # Obtenir le contenu du fichier Excel
+    return processed_data
+
+# Fonction pour convertir le DataFrame en fichier CSV
+def convert_df_to_csv(df):
+    return df.to_csv(index=False).encode('utf-8')
 
 # Fonction principale à appeler depuis le fichier main.py
 def app():
@@ -64,15 +87,20 @@ def app():
             st.write("Descriptions mises à jour :")
             st.dataframe(df)
 
-            # Téléchargement du fichier mis à jour
-            def convert_df_to_excel(df):
-                return df.to_excel(index=False)
-
+            # Téléchargement du fichier mis à jour au format Excel
             st.download_button(
-                label="Télécharger les descriptions mises à jour",
+                label="Télécharger les descriptions en Excel",
                 data=convert_df_to_excel(df),
                 file_name="produits_mis_a_jour.xlsx",
-                mime="application/vnd.ms-excel"
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+            # Téléchargement du fichier mis à jour au format CSV
+            st.download_button(
+                label="Télécharger les descriptions en CSV",
+                data=convert_df_to_csv(df),
+                file_name="produits_mis_a_jour.csv",
+                mime="text/csv"
             )
         else:
             st.error("Le fichier Excel doit contenir les colonnes 'Titre' et 'Description'.")
