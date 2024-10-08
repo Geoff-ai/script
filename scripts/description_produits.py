@@ -10,14 +10,14 @@ def generate_descriptions(api_key, selected_column, df):
     for title in df[selected_column]:
         try:
             response = openai.ChatCompletion.create(
-                model="gpt-4",
+                model="gpt-4",  # ou "gpt-3.5-turbo"
                 messages=[
                     {"role": "system", "content": ""},
                     {"role": "user", "content": title}  # Remplis avec le prompt souhaité
                 ],
                 temperature=1
             )
-            descriptions.append(response['choices'][0]['message']['content'].strip())  # Utiliser .strip() pour éviter les espaces inutiles
+            descriptions.append(response.choices[0].message.content.strip())  # Mise à jour pour le nouveau format
         except Exception as e:
             st.error(f"Erreur lors de la génération pour '{title}': {str(e)}")
             descriptions.append("")  # Ajouter une description vide en cas d'erreur
@@ -59,4 +59,3 @@ def app():
                 st.download_button("Télécharger le fichier mis à jour", csv, "updated_descriptions.csv", "text/csv")
             else:
                 st.error("Veuillez entrer la clé API et sélectionner une colonne.")
-
