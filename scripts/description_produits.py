@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import openai
 from io import BytesIO
+import openpyxl  # Pour utiliser openpyxl pour écrire des fichiers Excel
 
 # Lire la clé API depuis secrets.toml
 openai.api_key = st.secrets["openai"]["api_key"]
@@ -45,11 +46,11 @@ def generate_description_gpt4(title):
     description = response.choices[0].text.strip()
     return description
 
-# Fonction pour convertir le DataFrame en fichier Excel
+# Fonction pour convertir le DataFrame en fichier Excel avec openpyxl
 def convert_df_to_excel(df):
     output = BytesIO()  # Créer un buffer en mémoire
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False)
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False)  # Convertir le DataFrame en Excel
     processed_data = output.getvalue()  # Obtenir le contenu du fichier Excel
     return processed_data
 
