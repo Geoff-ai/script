@@ -3,7 +3,7 @@ from scripts import description_produits
 
 # Configuration des pages
 PAGES = {
-    "Analyse description des produits": description_produits
+    "Analyse description des produits": description_produits.app
 }
 
 # Titre principal
@@ -16,5 +16,5 @@ selection = st.sidebar.radio("", list(PAGES.keys()), index=0)
 # Affichage du script sélectionné
 page = PAGES[selection]
 
-# Appel du module sélectionné
-page  # Il suffit d'appeler le module sans utiliser .app()
+# Appel de la fonction app() du module sélectionné
+page()  # Exécute la fonction app() de description_produits
