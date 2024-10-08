@@ -1,9 +1,12 @@
 import streamlit as st
 import pandas as pd
+import openai  # Importer OpenAI pour utiliser l'API GPT-4
 from io import BytesIO
-import random
 
-# Liste des mots-clés stratégiques et synonymes
+# Clé API OpenAI
+openai.api_key = ""  # Remplacer par ta clé API OpenAI
+
+# Liste des mots-clés stratégiques
 seo_keywords = {
     "Poele a compartiments": 260,
     "Poele en pierre": 2900,
@@ -22,38 +25,24 @@ seo_keywords = {
     "Poele 7 trous": 20,
 }
 
-# Listes de synonymes pour varier les descriptions
-synonymes_durable = ["durable", "solide", "robuste", "résistant"]
-synonymes_polyvalent = ["polyvalent", "multi-usage", "adaptable", "pratique"]
-synonymes_entretien = ["facile à entretenir", "simple à nettoyer", "peu d'entretien", "entretien facile"]
-
-# Fonction pour générer des descriptions variées
-def generate_description(title):
-    keywords_in_title = [kw for kw in seo_keywords.keys() if kw.lower() in title.lower()]
-    if keywords_in_title:
-        primary_keyword = keywords_in_title[0]  # Prend le premier mot-clé trouvé
-    else:
-        primary_keyword = "poêle"
-    
-    # Sélection de synonymes pour varier les descriptions
-    durable = random.choice(synonymes_durable)
-    polyvalent = random.choice(synonymes_polyvalent)
-    entretien = random.choice(synonymes_entretien)
-
-    # Génération de la description en deux paragraphes
-    description = f"""
-    {title} est une {primary_keyword} exceptionnelle, conçue pour ceux qui recherchent la perfection en cuisine. 
-    Grâce à sa conception {durable}, elle garantit des performances optimales à chaque utilisation. 
-    Que vous prépariez un dîner en famille ou un repas rapide, cette {primary_keyword} est {polyvalent} et répond à tous vos besoins culinaires.
-
-    Avec une attention particulière aux détails, cette {primary_keyword} est également {entretien}, vous permettant de la maintenir en parfait état avec un minimum d'effort. 
-    Que vous cuisiniez sur une plaque à induction, un feu de gaz ou un autre type de cuisinière, ce produit vous offre une polyvalence inégalée.
+# Fonction pour générer des descriptions en utilisant l'API OpenAI GPT-4
+def generate_description_gpt4(title):
+    prompt = f"""
+    Écris une description unique en 2 paragraphes d'au moins 300 mots pour un produit appelé '{title}'. 
+    Intègre les avantages, l'utilisation du produit, ainsi que des conseils d'entretien. 
+    Utilise un ton persuasif et assure l'optimisation SEO. Si possible, inclue des mots-clés pertinents comme {', '.join(seo_keywords.keys())}.
     """
     
-    # Vérification de la longueur du texte pour garantir 300 mots minimum
-    if len(description.split()) < 300:
-        description += " " * (300 - len(description.split()))  # Ajoute des espaces ou du texte pour compléter
-
+    response = openai.Completion.create(
+        engine="gpt-4o",  # Utilisation de GPT-4
+        prompt=prompt,
+        max_tokens=500,
+        n=1,
+        stop=None,
+        temperature=1  # Ajuste la température pour contrôler la créativité
+    )
+    
+    description = response.choices[0].text.strip()
     return description
 
 # Fonction pour convertir le DataFrame en fichier Excel
@@ -80,8 +69,8 @@ def app():
         if 'Titre' in df.columns and 'Description' in df.columns:
             for index, row in df.iterrows():
                 if pd.isna(row['Description']):
-                    # Générer une nouvelle description si aucune description n'existe
-                    df.at[index, 'Description'] = generate_description(row['Titre'])
+                    # Utiliser GPT-4 pour générer une nouvelle description
+                    df.at[index, 'Description'] = generate_description_gpt4(row['Titre'])
 
             # Affichage des descriptions mises à jour
             st.write("Descriptions mises à jour :")
