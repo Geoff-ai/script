@@ -8,16 +8,19 @@ def generate_descriptions(api_key, selected_column, df):
     descriptions = []
     
     for title in df[selected_column]:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": ""},
-                {"role": "user", "content": f"{title}"}  # Remplis avec le prompt souhaité
-            ],
-            temperature=1
-        )
-        
-        descriptions.append(response['choices'][0]['message']['content'])
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": ""},
+                    {"role": "user", "content": title}  # Remplis avec le prompt souhaité
+                ],
+                temperature=1
+            )
+            descriptions.append(response['choices'][0]['message']['content'].strip())  # Utiliser .strip() pour éviter les espaces inutiles
+        except Exception as e:
+            st.error(f"Erreur lors de la génération pour '{title}': {str(e)}")
+            descriptions.append("")  # Ajouter une description vide en cas d'erreur
     
     df['Description'] = descriptions
     return df
@@ -56,3 +59,4 @@ def app():
                 st.download_button("Télécharger le fichier mis à jour", csv, "updated_descriptions.csv", "text/csv")
             else:
                 st.error("Veuillez entrer la clé API et sélectionner une colonne.")
+
