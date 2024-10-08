@@ -1,38 +1,57 @@
-import openai
+import streamlit as st
 import pandas as pd
+from openai import OpenAIError
+import openai
 
-# Instancier le client OpenAI avec la clé API
-client = openai.OpenAI(api_key="TA_CLE_API")
+# Configuration de l'API OpenAI
+openai.api_key = 'TA_CLE_API_ICI'
 
-# Fonction pour générer une description de produit
-def generer_description(titre_produit):
-    messages = [
-        {"role": "system", "content": "Tu es un assistant qui aide à rédiger des descriptions de produits."},
-        {"role": "user", "content": f"Rédige une description pour le produit : {titre_produit}. Assure-toi qu'elle fasse au moins 300 mots."}
-    ]
-    
+def generer_description(titre):
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # ou gpt-4 selon ton choix
-            messages=messages,
-            max_tokens=300
+        # Appel à l'API OpenAI
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # ou "gpt-4"
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": f"Please write a product description for {titre}."}
+            ]
         )
         return response['choices'][0]['message']['content']
-    except Exception as e:
-        print(f"Erreur lors de la génération de la description pour {titre_produit}: {e}")
-        return None
+    except OpenAIError as e:
+        st.error(f"Erreur lors de l'appel à l'API OpenAI : {e}")
+        return ""
 
-# Charger le fichier Excel et générer les descriptions
-def traiter_fichier_excel(fichier):
+# Téléchargement du fichier Excel
+fichier = st.file_uploader("Choisissez un fichier Excel", type="xlsx")
+
+if fichier:
+    st.write("Fichier chargé avec succès. Lecture du fichier...")
     df = pd.read_excel(fichier)
-    
-    # Assumer que les titres de produits sont dans la colonne "Titre"
-    if 'Titre' not in df.columns:
-        print("Le fichier ne contient pas de colonne 'Titre'.")
-        return
-    
-    df['Description'] = df['Titre'].apply(generer_description)
-    
-    # Sauvegarder les résultats dans un nouveau fichier Excel
-    df.to_excel("produits_avec_descriptions.xlsx", index=False)
-    print("Descriptions générées et sauvegardées dans 'produits_avec_descriptions.xlsx'.")
+
+    # Affichage des premières lignes pour vérifier le fichier
+    st.write("Voici un aperçu des données du fichier :")
+    st.write(df.head())
+
+    # Ajout d'un bouton pour lancer l'analyse des titres
+    if st.button("Générer les descriptions"):
+        st.write("Traitement des données en cours...")
+
+        # Boucle sur chaque ligne pour générer une description
+        try:
+            for index, row in df.iterrows():
+                titre = row['Titre']
+                st.write(f"Traitement du titre : {titre}")
+
+                # Appel de la fonction pour générer la description
+                description = generer_description(titre)
+                st.write(f"Description générée pour {titre}")
+
+                # Mise à jour de la colonne 'Description'
+                df.at[index, 'Description'] = description
+
+            # Sauvegarde du fichier Excel avec les descriptions
+            df.to_excel('output_with_descriptions.xlsx', index=False)
+            st.write("Descriptions générées et fichier sauvegardé sous le nom 'output_with_descriptions.xlsx'.")
+
+        except Exception as e:
+            st.error(f"Erreur lors du traitement : {e}")
