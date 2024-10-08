@@ -10,7 +10,7 @@ PAGES = {
 }
 
 # Titre principal
-st.sidebar.title("KakaSEO")
+st.sidebar.title("roykyserpking")
 
 # Sous-titre et choix des scripts
 st.sidebar.subheader("Les scripts")
@@ -21,4 +21,4 @@ page = PAGES[selection]
 page.app()
 
 # Copyright
-st.sidebar.markdown("©️ 2024 | by KakaSEO")
+st.sidebar.markdown("©️ 2024 | by roykyserpking")
