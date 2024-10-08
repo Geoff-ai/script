@@ -40,7 +40,7 @@ if uploaded_file is not None:
 
     # Saisie des prompts pour OpenAI
     system_prompt = st.text_area("System prompt", value="")
-    user_prompt = st.text_area("User prompt", value="Rédige une description produit de 300 mot pour le titre suivant : {title}")
+    user_prompt = st.text_area("User prompt", value="Rédige une description produit de 300 mots pour le titre suivant : {title}")
 
     # Bouton pour générer les descriptions
     if st.button("Générer les descriptions"):
