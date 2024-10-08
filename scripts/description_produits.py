@@ -7,7 +7,7 @@ import openai
 # Lire la clé API depuis secrets.toml
 openai.api_key = st.secrets["openai"]["api_key"]
 
-# Fonction pour générer des descriptions en utilisant GPT-4o ou GPT-3.5-turbo
+# Fonction pour générer des descriptions en utilisant GPT-3.5-turbo ou GPT-4o
 def generate_description_gpt(model, title):
     prompt = f"""
     Écris une description unique en 2 paragraphes d'au moins 300 mots pour un produit appelé '{title}'. 
@@ -23,8 +23,8 @@ def generate_description_gpt(model, title):
                 {"role": "user", "content": prompt}
             ]
         )
-        # Utilisation correcte de la réponse avec la nouvelle API
-        description = response.choices[0].message["content"].strip()
+        # Récupération correcte du texte généré avec la nouvelle API
+        description = response['choices'][0]['message']['content'].strip()
     except Exception as e:
         st.error(f"Erreur avec l'API OpenAI : {str(e)}")
         description = "Description non générée en raison d'une erreur."
