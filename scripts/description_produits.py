@@ -28,10 +28,10 @@ def generate_description(title, system_prompt, user_prompt):
         )
         # Retourne la réponse formatée
         return response['choices'][0]['message']['content'].strip()
-    except openai.error.InvalidRequestError as e:
+    except openai.InvalidRequestError as e:
         st.error(f"Erreur dans la requête OpenAI : {e}")
         return "Erreur dans la requête OpenAI"
-    except openai.error.OpenAIError as e:
+    except openai.OpenAIError as e:
         st.error(f"Une erreur OpenAI s'est produite : {e}")
         return "Erreur lors de la génération de la description"
     except Exception as e:
@@ -87,3 +87,9 @@ def app():
             except Exception as e:
                 st.error(f"Erreur lors de la génération des descriptions : {e}")
 
+# Appel de la fonction principale
+def main():
+    app()
+
+if __name__ == "__main__":
+    main()
