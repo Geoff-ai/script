@@ -1,5 +1,5 @@
 import streamlit as st
-from scripts import maillage_interne
+from scripts import description_produits
 
 
 
@@ -7,12 +7,12 @@ from scripts import maillage_interne
 
 # Configuration des pages
 PAGES = {
-    "Analyse kefehgie": maillage_interne
+    "Analyse kefehgie": description_produits
 
 }
 
 # Titre principal
-st.sidebar.title("KakaSEO")
+st.sidebar.title("roykyserpking")
 
 # Sous-titre et choix des scripts
 st.sidebar.subheader("Les scripts")
@@ -23,4 +23,4 @@ page = PAGES[selection]
 page.app()
 
 # Copyright
-st.sidebar.markdown("©️ 2024 | by KakaSEO")
+st.sidebar.markdown("©️ 2024 | by roykyserpking")
