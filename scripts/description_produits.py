@@ -6,7 +6,7 @@ import streamlit as st
 def traiter_fichier_excel():
     fichier = st.file_uploader("Choisissez un fichier Excel", type="xlsx")
 
-    if fichier:
+    if fichier is not None:
         df = pd.read_excel(fichier)
         st.write("Fichier chargé avec succès. Voici un aperçu des données :")
         st.write(df.head())
