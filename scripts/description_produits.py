@@ -1,6 +1,7 @@
 import openai
 import pandas as pd
 import streamlit as st
+from openai.error import InvalidRequestError, OpenAIError  # Importation correcte des exceptions
 
 # Récupération de la clé API OpenAI à partir de secrets.toml
 openai.api_key = st.secrets["openai"]["api_key"]
@@ -11,6 +12,7 @@ def generate_description(title, system_prompt, user_prompt):
         if not title or pd.isna(title):  # Vérification si le titre est vide ou invalide
             return "Titre invalide ou manquant"
         
+        # Appel à l'API OpenAI pour générer la description
         response = openai.ChatCompletion.create(
             model="gpt-4o-mini",  # Utilisation du modèle gpt-4o-mini
             messages=[
@@ -25,6 +27,7 @@ def generate_description(title, system_prompt, user_prompt):
             ],
             temperature=1
         )
+        # Retourne la réponse formatée
         return response['choices'][0]['message']['content'].strip()
     except InvalidRequestError as e:
         st.error(f"Erreur dans la requête OpenAI : {e}")
@@ -84,3 +87,7 @@ def app():
                 st.download_button(label="Télécharger le fichier mis à jour", data=csv, file_name='fichier_mis_a_jour.csv', mime='text/csv')
             except Exception as e:
                 st.error(f"Erreur lors de la génération des descriptions : {e}")
+
+# Lancement de l'application Streamlit
+if __name__ == "__main__":
+    app()
