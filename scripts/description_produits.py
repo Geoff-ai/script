@@ -36,7 +36,7 @@ def generate_description_gpt4(title):
     
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4o",
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that generates product descriptions."},
                 {"role": "user", "content": prompt}
