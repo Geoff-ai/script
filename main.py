@@ -1,16 +1,13 @@
 import streamlit as st
 from scripts import description_produits
 
-
-
 # Configuration des pages
 PAGES = {
     "Desc produits": description_produits
-
 }
 
 # Titre principal
-st.sidebar.title("roykyserpking")
+st.sidebar.title("Cuisine Confort")
 
 # Sous-titre et choix des scripts
 st.sidebar.subheader("Les scripts")
@@ -21,4 +18,4 @@ page = PAGES[selection]
 page.app()
 
 # Copyright
-st.sidebar.markdown("©️ 2024 | by roykyserpking")
+st.sidebar.markdown("©️ 2024 | by Cuisine Confort")
