@@ -26,7 +26,7 @@ seo_keywords = {
     "Poele 7 trous": 20,
 }
 
-# Fonction pour générer des descriptions en utilisant l'API OpenAI GPT-4
+# Fonction pour générer des descriptions en utilisant l'API OpenAI GPT-4o
 def generate_description_gpt4(title):
     prompt = f"""
     Écris une description unique en 2 paragraphes d'au moins 300 mots pour un produit appelé '{title}'. 
@@ -35,15 +35,14 @@ def generate_description_gpt4(title):
     """
     
     try:
-        response = openai.Completion.create(
-            engine="gpt-4",
-            prompt=prompt,
-            max_tokens=500,
-            n=1,
-            stop=None,
-            temperature=0.7
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that generates product descriptions."},
+                {"role": "user", "content": prompt}
+            ]
         )
-        description = response.choices[0].text.strip()
+        description = response['choices'][0]['message']['content'].strip()
     except Exception as e:
         st.error(f"Erreur avec l'API OpenAI : {str(e)}")
         description = "Description non générée en raison d'une erreur."
@@ -74,7 +73,7 @@ def app():
         if 'Titre' in df.columns and 'Description' in df.columns:
             for index, row in df.iterrows():
                 if pd.isna(row['Description']) or row['Description'] == "":
-                    # Utiliser GPT-4 pour générer une nouvelle description
+                    # Utiliser GPT-4o pour générer une nouvelle description
                     new_description = generate_description_gpt4(row['Titre'])
                     df.at[index, 'Description'] = new_description
                 else:
