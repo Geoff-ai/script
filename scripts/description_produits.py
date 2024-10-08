@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
-from openai import OpenAI
 from io import BytesIO
 import openpyxl
+from openai import OpenAI  # Nouvelle façon d'importer OpenAI
 
-# Créer une instance OpenAI
+# Lire la clé API depuis secrets.toml
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
 # Liste des mots-clés stratégiques
@@ -35,7 +35,6 @@ def generate_description_gpt4(title):
     """
     
     try:
-        # Appel à l'API OpenAI GPT-4 avec la nouvelle méthode
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
@@ -43,7 +42,7 @@ def generate_description_gpt4(title):
                 {"role": "user", "content": prompt}
             ]
         )
-        description = response.choices[0].message["content"].strip()
+        description = response['choices'][0]['message']['content'].strip()
     except Exception as e:
         st.error(f"Erreur avec l'API OpenAI : {str(e)}")
         description = "Description non générée en raison d'une erreur."
