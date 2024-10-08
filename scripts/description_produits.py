@@ -45,32 +45,34 @@ def generate_description(title):
 
     return description
 
-# Téléchargement du fichier Excel
-uploaded_file = st.file_uploader("Choisissez un fichier Excel", type="xlsx")
+# Fonction principale à appeler depuis le fichier main.py
+def app():
+    # Téléchargement du fichier Excel
+    uploaded_file = st.file_uploader("Choisissez un fichier Excel", type="xlsx")
 
-if uploaded_file:
-    df = pd.read_excel(uploaded_file)
-    
-    # Vérification des colonnes attendues
-    if 'Titre' in df.columns and 'Description' in df.columns:
-        for index, row in df.iterrows():
-            if pd.isna(row['Description']):
-                # Générer une nouvelle description si aucune description n'existe
-                df.at[index, 'Description'] = generate_description(row['Titre'])
-        
-        # Affichage des descriptions mises à jour
-        st.write("Descriptions mises à jour :")
-        st.dataframe(df)
+    if uploaded_file:
+        df = pd.read_excel(uploaded_file)
 
-        # Téléchargement du fichier mis à jour
-        def convert_df_to_excel(df):
-            return df.to_excel(index=False)
+        # Vérification des colonnes attendues
+        if 'Titre' in df.columns and 'Description' in df.columns:
+            for index, row in df.iterrows():
+                if pd.isna(row['Description']):
+                    # Générer une nouvelle description si aucune description n'existe
+                    df.at[index, 'Description'] = generate_description(row['Titre'])
 
-        st.download_button(
-            label="Télécharger les descriptions mises à jour",
-            data=convert_df_to_excel(df),
-            file_name="produits_mis_a_jour.xlsx",
-            mime="application/vnd.ms-excel"
-        )
-    else:
-        st.error("Le fichier Excel doit contenir les colonnes 'Titre' et 'Description'.")
+            # Affichage des descriptions mises à jour
+            st.write("Descriptions mises à jour :")
+            st.dataframe(df)
+
+            # Téléchargement du fichier mis à jour
+            def convert_df_to_excel(df):
+                return df.to_excel(index=False)
+
+            st.download_button(
+                label="Télécharger les descriptions mises à jour",
+                data=convert_df_to_excel(df),
+                file_name="produits_mis_a_jour.xlsx",
+                mime="application/vnd.ms-excel"
+            )
+        else:
+            st.error("Le fichier Excel doit contenir les colonnes 'Titre' et 'Description'.")
