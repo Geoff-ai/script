@@ -42,7 +42,7 @@ def generate_description_gpt4(title):
                 {"role": "user", "content": prompt}
             ]
         )
-        description = response['choices'][0]['message']['content'].strip()  # Utilisez correctement les méthodes
+        description = response.choices[0].message['content'].strip()  # Correction ici
     except Exception as e:
         st.error(f"Erreur avec l'API OpenAI : {str(e)}")
         description = "Description non générée en raison d'une erreur."
