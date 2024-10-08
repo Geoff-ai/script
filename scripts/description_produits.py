@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
-import openai  # Importer OpenAI pour utiliser l'API GPT-4
+import openai
 from io import BytesIO
 
-# Clé API OpenAI
-openai.api_key = ""  # Remplacer par ta clé API OpenAI
+# Lire la clé API depuis secrets.toml
+openai.api_key = st.secrets["openai"]["api_key"]
 
 # Liste des mots-clés stratégiques
 seo_keywords = {
@@ -34,12 +34,12 @@ def generate_description_gpt4(title):
     """
     
     response = openai.Completion.create(
-        engine="gpt-4o",  # Utilisation de GPT-4
+        engine="gpt-4",
         prompt=prompt,
         max_tokens=500,
         n=1,
         stop=None,
-        temperature=1  # Ajuste la température pour contrôler la créativité
+        temperature=0.7
     )
     
     description = response.choices[0].text.strip()
@@ -49,7 +49,7 @@ def generate_description_gpt4(title):
 def convert_df_to_excel(df):
     output = BytesIO()  # Créer un buffer en mémoire
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False)  # Convertir le DataFrame en Excel
+        df.to_excel(writer, index=False)
     processed_data = output.getvalue()  # Obtenir le contenu du fichier Excel
     return processed_data
 
