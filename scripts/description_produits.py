@@ -1,64 +1,59 @@
-import pandas as pd
 import openai
+import pandas as pd
 import streamlit as st
-import io
 
-# Fonction pour traiter le fichier Excel
-def traiter_fichier_excel():
-    fichier = st.file_uploader("Choisissez un fichier Excel", type="xlsx")
+# Récupération de la clé API OpenAI à partir de secrets.toml
+openai.api_key = st.secrets["openai"]["api_key"]
 
-    if fichier is not None:
-        try:
-            df = pd.read_excel(fichier)
-            if 'Titre' not in df.columns:
-                st.error("Le fichier Excel doit contenir une colonne 'Titre'.")
-                return
-            
-            if 'Description' not in df.columns:
-                df['Description'] = ""  # Ajoute la colonne 'Description' si elle n'existe pas
+# Fonction pour générer une description via l'API OpenAI
+def generate_description(title, system_prompt, user_prompt):
+    response = openai.ChatCompletion.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt.format(title=title)}
+        ],
+        temperature=1
+    )
+    return response['choices'][0]['message']['content'].strip()
 
-            st.write("Fichier chargé avec succès. Voici un aperçu des données :")
-            st.write(df.head())
+# Interface utilisateur Streamlit
+st.title("Générateur de descriptions produits")
 
-            # Boucle sur chaque ligne du fichier Excel
-            for index, row in df.iterrows():
-                titre = row['Titre']  # Assurez-vous que la colonne s'appelle 'Titre'
-                description = generer_description(titre)
-                df.at[index, 'Description'] = description
+# Upload du fichier
+uploaded_file = st.file_uploader("Chargez un fichier .xlsx ou .csv", type=["xlsx", "csv"])
 
-            # Sauvegarde du fichier avec les descriptions dans un buffer mémoire
-            buffer = io.BytesIO()
-            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                df.to_excel(writer, index=False)
+if uploaded_file is not None:
+    # Lecture du fichier dans un dataframe
+    if uploaded_file.name.endswith('.xlsx'):
+        df = pd.read_excel(uploaded_file)
+    else:
+        df = pd.read_csv(uploaded_file)
 
-            st.write("Descriptions générées avec succès !")
+    # Sélection de la colonne contenant les titres
+    columns = df.columns.tolist()
+    title_column = st.selectbox("Sélectionnez la colonne des titres", columns)
 
-            # Ajout d'un bouton de téléchargement pour le fichier Excel généré
-            st.download_button(
-                label="Télécharger le fichier avec descriptions",
-                data=buffer,
-                file_name="output_with_descriptions.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-        except Exception as e:
-            st.error(f"Erreur lors du chargement du fichier Excel : {e}")
+    # Affichage du dataframe avant la génération
+    st.write("Dataframe initial :")
+    st.write(df)
 
-# Fonction pour générer une description en utilisant l'API OpenAI
-def generer_description(titre):
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Please write a product description for {titre}."}
-            ]
-        )
-        return response['choices'][0]['message']['content']
-    except Exception as e:
-        st.error(f"Erreur avec l'API OpenAI : {e}")
-        return ""
+    # Saisie des prompts pour OpenAI
+    system_prompt = st.text_area("System prompt", value="")
+    user_prompt = st.text_area("User prompt", value="Rédige une description produit de 300 mot pour le titre suivant : {title}")
 
-# Appel de la fonction principale
-if __name__ == "__main__":
-    st.title("Générateur de descriptions de produits")
-    traiter_fichier_excel()
+    # Bouton pour générer les descriptions
+    if st.button("Générer les descriptions"):
+        # Mise à jour du dataframe avec les descriptions générées
+        df['Description'] = df[title_column].apply(lambda x: generate_description(x, system_prompt, user_prompt))
+        
+        # Affichage du dataframe mis à jour
+        st.write("Dataframe mis à jour :")
+        st.write(df)
+
+        # Option pour télécharger le dataframe modifié
+        def convert_df(df):
+            return df.to_csv(index=False).encode('utf-8')
+
+        csv = convert_df(df)
+        st.download_button(label="Télécharger le fichier mis à jour", data=csv, file_name='fichier_mis_a_jour.csv', mime='text/csv')
