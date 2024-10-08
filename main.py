@@ -3,7 +3,7 @@ from scripts import description_produits
 
 # Configuration des pages
 PAGES = {
-    "Analyse description des produits": description_produits.traiter_fichier_excel
+    "Analyse description des produits": description_produits
 }
 
 # Menu latéral
