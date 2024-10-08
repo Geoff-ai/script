@@ -1,7 +1,6 @@
 import openai
 import pandas as pd
 import streamlit as st
-from openai import InvalidRequestError, OpenAIError  # Importation correcte des erreurs
 
 # Récupération de la clé API OpenAI à partir de secrets.toml
 openai.api_key = st.secrets["openai"]["api_key"]
