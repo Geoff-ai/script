@@ -2,19 +2,32 @@ import openai
 import pandas as pd
 import streamlit as st
 
-# Fonction pour générer une description via l'API OpenAI
-def generate_description(title, system_prompt, user_prompt):
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt.format(title=title)}
-        ],
-        temperature=1
-    )
-    return response['choices'][0]['message']['content'].strip()
+# Récupération de la clé API OpenAI à partir de secrets.toml
+openai.api_key = st.secrets["openai"]["api_key"]
 
-# Fonction app() pour Streamlit
+# Fonction pour générer une description via l'API OpenAI avec le modèle gpt-4o-mini
+def generate_description(title, system_prompt, user_prompt):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",  # Utilisation du modèle gpt-4o-mini
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt  # Instructions générales sur le comportement du modèle
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt.format(title=title)  # Instruction spécifique pour chaque titre
+                }
+            ],
+            temperature=1
+        )
+        return response['choices'][0]['message']['content'].strip()
+    except openai.error.InvalidRequestError as e:
+        st.error(f"Erreur dans la requête OpenAI : {e}")
+        return ""
+
+# Définition de l'application Streamlit pour la génération des descriptions
 def app():
     st.title("Générateur de descriptions produits")
 
@@ -37,7 +50,7 @@ def app():
         st.write(df)
 
         # Saisie des prompts pour OpenAI
-        system_prompt = st.text_area("System prompt", value="")
+        system_prompt = st.text_area("System prompt", value="You are a helpful assistant that generates product descriptions.")
         user_prompt = st.text_area("User prompt", value="Rédige une description produit de 300 mots pour le titre suivant : {title}")
 
         # Bouton pour générer les descriptions
