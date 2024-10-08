@@ -7,7 +7,7 @@ from scripts import description_produits
 
 # Configuration des pages
 PAGES = {
-    "Analyse kefehgie": description_produits
+    "Analyse description dessproduits": description_produits
 
 }
 
