@@ -74,4 +74,12 @@ def app():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
-            # Téléchargement du fichier mis à
+            # Téléchargement du fichier mis à jour au format CSV
+            st.download_button(
+                label="Télécharger les descriptions en CSV",
+                data=convert_df_to_csv(df),
+                file_name="produits_mis_a_jour.csv",
+                mime="text/csv"
+            )
+        else:
+            st.error("Le fichier Excel doit contenir les colonnes 'Titre' et 'Description'.")
