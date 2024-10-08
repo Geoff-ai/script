@@ -26,8 +26,8 @@ seo_keywords = {
     "Poele 7 trous": 20,
 }
 
-# Fonction pour générer des descriptions en utilisant l'API OpenAI GPT-4
-def generate_description_gpt4(title):
+# Fonction pour générer des descriptions en utilisant l'API OpenAI GPT-3.5-turbo
+def generate_description_gpt35(title):
     prompt = f"""
     Écris une description unique en 2 paragraphes d'au moins 300 mots pour un produit appelé '{title}'. 
     Intègre les avantages, l'utilisation du produit, ainsi que des conseils d'entretien. 
@@ -36,14 +36,14 @@ def generate_description_gpt4(title):
     
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",  # Utilisation de GPT-3.5-turbo
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that generates product descriptions."},
                 {"role": "user", "content": prompt}
             ]
         )
         # Accéder correctement au contenu de la réponse
-        description = response.choices[0].message.content.strip()  
+        description = response['choices'][0]['message']['content'].strip()
     except Exception as e:
         st.error(f"Erreur avec l'API OpenAI : {str(e)}")
         description = "Description non générée en raison d'une erreur."
@@ -74,8 +74,8 @@ def app():
         if 'Titre' in df.columns and 'Description' in df.columns:
             for index, row in df.iterrows():
                 if pd.isna(row['Description']) or row['Description'] == "":
-                    # Utiliser GPT-4 pour générer une nouvelle description
-                    new_description = generate_description_gpt4(row['Titre'])
+                    # Utiliser GPT-3.5-turbo pour générer une nouvelle description
+                    new_description = generate_description_gpt35(row['Titre'])
                     df.at[index, 'Description'] = new_description
                 else:
                     st.write(f"Description déjà présente pour '{row['Titre']}'")
