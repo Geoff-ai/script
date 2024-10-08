@@ -1,6 +1,7 @@
 import openai
 import pandas as pd
 import streamlit as st
+from openai.error import InvalidRequestError, OpenAIError  # Importation des erreurs spécifiques
 
 # Récupération de la clé API OpenAI à partir de secrets.toml
 openai.api_key = st.secrets["openai"]["api_key"]
@@ -26,11 +27,14 @@ def generate_description(title, system_prompt, user_prompt):
             temperature=1
         )
         return response['choices'][0]['message']['content'].strip()
-    except openai.error.InvalidRequestError as e:
+    except InvalidRequestError as e:
         st.error(f"Erreur dans la requête OpenAI : {e}")
         return "Erreur dans la requête OpenAI"
+    except OpenAIError as e:
+        st.error(f"Une erreur OpenAI s'est produite : {e}")
+        return "Erreur lors de la génération de la description"
     except Exception as e:
-        st.error(f"Une erreur s'est produite : {e}")
+        st.error(f"Une erreur inattendue s'est produite : {e}")
         return "Erreur lors de la génération de la description"
 
 # Définition de l'application Streamlit pour la génération des descriptions
