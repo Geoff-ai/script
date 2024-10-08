@@ -3,29 +3,51 @@ import pandas as pd
 from io import BytesIO
 import openpyxl
 from openai import OpenAI
+import json
 
 # Lire la clé API depuis secrets.toml
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
-# Fonction pour générer des descriptions en utilisant l'API OpenAI GPT-3.5 avec température
+# Liste des mots-clés stratégiques
+seo_keywords = {
+    "Poele a compartiments": 260,
+    "Poele en pierre": 2900,
+    "poele inox 18/10": 2900,
+    "poele a paella": 2400,
+    "Poele cuivre": 1900,
+    "Poele en acier": 1900,
+    "poele en fonte": 12000,
+    "Poele a pancake / a crepes": 4400,
+    "poele a oeuf": 480,
+    "Poele double compartiments": 480,
+    "Poele 2 compartiments": 320,
+    "Poele 4 compartiments": 210,
+    "Poele a frire": 1000,
+    "Poele 4 trous": 50,
+    "Poele 7 trous": 20,
+}
+
+# Fonction pour générer des descriptions en utilisant l'API OpenAI GPT-3.5-turbo
 def generate_description_gpt35(title):
     prompt = f"""
     Écris une description unique en 2 paragraphes d'au moins 300 mots pour un produit appelé '{title}'. 
     Intègre les avantages, l'utilisation du produit, ainsi que des conseils d'entretien. 
-    Utilise un ton persuasif et assure l'optimisation SEO.
+    Utilise un ton persuasif et assure l'optimisation SEO. Voici quelques mots-clés : {', '.join(seo_keywords.keys())}.
     """
     
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo",  # Utilisation de GPT-3.5-turbo
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that generates product descriptions."},
                 {"role": "user", "content": prompt}
-            ],
-            temperature=1  # Contrôle de la créativité ici
+            ]
         )
-        # Accéder correctement au contenu de la réponse
-        description = response['choices'][0]['message']['content'].strip()
+        
+        # Convertir la réponse en JSON pour l'accès correct aux données
+        response_json = json.loads(response.model_dump_json())
+        description = response_json["choices"][0]["message"]["content"].strip()
+    
     except Exception as e:
         st.error(f"Erreur avec l'API OpenAI : {str(e)}")
         description = "Description non générée en raison d'une erreur."
@@ -56,7 +78,7 @@ def app():
         if 'Titre' in df.columns and 'Description' in df.columns:
             for index, row in df.iterrows():
                 if pd.isna(row['Description']) or row['Description'] == "":
-                    # Utiliser GPT-3.5 pour générer une nouvelle description
+                    # Utiliser GPT-3.5-turbo pour générer une nouvelle description
                     new_description = generate_description_gpt35(row['Titre'])
                     df.at[index, 'Description'] = new_description
                 else:
