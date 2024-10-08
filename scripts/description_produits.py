@@ -8,6 +8,9 @@ openai.api_key = st.secrets["openai"]["api_key"]
 # Fonction pour générer une description via l'API OpenAI avec le modèle gpt-4o-mini
 def generate_description(title, system_prompt, user_prompt):
     try:
+        if not title or pd.isna(title):  # Vérification si le titre est vide ou invalide
+            return "Titre invalide ou manquant"
+        
         response = openai.ChatCompletion.create(
             model="gpt-4o-mini",  # Utilisation du modèle gpt-4o-mini
             messages=[
@@ -25,7 +28,10 @@ def generate_description(title, system_prompt, user_prompt):
         return response['choices'][0]['message']['content'].strip()
     except openai.error.InvalidRequestError as e:
         st.error(f"Erreur dans la requête OpenAI : {e}")
-        return ""
+        return "Erreur dans la requête OpenAI"
+    except Exception as e:
+        st.error(f"Une erreur s'est produite : {e}")
+        return "Erreur lors de la génération de la description"
 
 # Définition de l'application Streamlit pour la génération des descriptions
 def app():
@@ -36,10 +42,14 @@ def app():
 
     if uploaded_file is not None:
         # Lecture du fichier dans un dataframe
-        if uploaded_file.name.endswith('.xlsx'):
-            df = pd.read_excel(uploaded_file)
-        else:
-            df = pd.read_csv(uploaded_file)
+        try:
+            if uploaded_file.name.endswith('.xlsx'):
+                df = pd.read_excel(uploaded_file)
+            else:
+                df = pd.read_csv(uploaded_file)
+        except Exception as e:
+            st.error(f"Erreur lors du chargement du fichier : {e}")
+            return
 
         # Sélection de la colonne contenant les titres
         columns = df.columns.tolist()
@@ -55,16 +65,19 @@ def app():
 
         # Bouton pour générer les descriptions
         if st.button("Générer les descriptions"):
-            # Mise à jour du dataframe avec les descriptions générées
-            df['Description'] = df[title_column].apply(lambda x: generate_description(x, system_prompt, user_prompt))
+            try:
+                # Mise à jour du dataframe avec les descriptions générées
+                df['Description'] = df[title_column].apply(lambda x: generate_description(x, system_prompt, user_prompt))
 
-            # Affichage du dataframe mis à jour
-            st.write("Dataframe mis à jour :")
-            st.write(df)
+                # Affichage du dataframe mis à jour
+                st.write("Dataframe mis à jour :")
+                st.write(df)
 
-            # Option pour télécharger le dataframe modifié
-            def convert_df(df):
-                return df.to_csv(index=False).encode('utf-8')
+                # Option pour télécharger le dataframe modifié
+                def convert_df(df):
+                    return df.to_csv(index=False).encode('utf-8')
 
-            csv = convert_df(df)
-            st.download_button(label="Télécharger le fichier mis à jour", data=csv, file_name='fichier_mis_a_jour.csv', mime='text/csv')
+                csv = convert_df(df)
+                st.download_button(label="Télécharger le fichier mis à jour", data=csv, file_name='fichier_mis_a_jour.csv', mime='text/csv')
+            except Exception as e:
+                st.error(f"Erreur lors de la génération des descriptions : {e}")
