@@ -1,92 +1,58 @@
-import openai
-import pandas as pd
 import streamlit as st
+import pandas as pd
+import openai
 
-# Récupération de la clé API OpenAI à partir de secrets.toml
-openai.api_key = st.secrets["openai"]["api_key"]
-
-# Fonction pour générer une description via l'API OpenAI avec le modèle gpt-4o-mini
-def generate_description(title, system_prompt, user_prompt):
-    try:
-        if not title or pd.isna(title):  # Vérification si le titre est vide ou invalide
-            return "Titre invalide ou manquant"
-        
-        # Appel à l'API OpenAI pour générer la description
+# Fonction pour générer des descriptions
+def generate_descriptions(api_key, selected_column, df):
+    openai.api_key = api_key
+    descriptions = []
+    
+    for title in df[selected_column]:
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",  # Utilisation du modèle gpt-4o-mini
+            model="gpt-4",
             messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt  # Instructions générales sur le comportement du modèle
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt.format(title=title)  # Instruction spécifique pour chaque titre
-                }
+                {"role": "system", "content": ""},
+                {"role": "user", "content": f"{title}"}  # Remplis avec le prompt souhaité
             ],
             temperature=1
         )
-        # Retourne la réponse formatée
-        return response['choices'][0]['message']['content'].strip()
-    except openai.error.OpenAIError as e:
-        st.error(f"Une erreur OpenAI s'est produite : {e}")
-        return "Erreur lors de la génération de la description"
-    except Exception as e:
-        st.error(f"Une erreur inattendue s'est produite : {e}")
-        return "Erreur lors de la génération de la description"
+        
+        descriptions.append(response['choices'][0]['message']['content'])
+    
+    df['Description'] = descriptions
+    return df
 
-# Définition de l'application Streamlit pour la génération des descriptions
 def app():
-    st.title("Générateur de descriptions produits")
+    st.title("Générateur de descriptions de produits")
 
-    # Upload du fichier
-    uploaded_file = st.file_uploader("Chargez un fichier .xlsx ou .csv", type=["xlsx", "csv"])
-
+    # Chargement du fichier
+    uploaded_file = st.file_uploader("Téléchargez un fichier .xlsx ou .csv", type=['xlsx', 'csv'])
+    
     if uploaded_file is not None:
-        # Lecture du fichier dans un dataframe
-        try:
-            if uploaded_file.name.endswith('.xlsx'):
-                df = pd.read_excel(uploaded_file)
-            else:
-                df = pd.read_csv(uploaded_file)
-        except Exception as e:
-            st.error(f"Erreur lors du chargement du fichier : {e}")
-            return
+        if uploaded_file.name.endswith('.xlsx'):
+            df = pd.read_excel(uploaded_file)
+        else:
+            df = pd.read_csv(uploaded_file)
 
-        # Sélection de la colonne contenant les titres
-        columns = df.columns.tolist()
-        title_column = st.selectbox("Sélectionnez la colonne des titres", columns)
+        # Affichage des colonnes du DataFrame
+        st.write("Colonnes disponibles :", df.columns.tolist())
+        
+        # Sélection de la colonne des titres
+        selected_column = st.selectbox("Sélectionnez la colonne des titres", df.columns.tolist())
 
-        # Affichage du dataframe avant la génération
-        st.write("Dataframe initial :")
-        st.write(df)
+        # Champ pour la clé API
+        api_key = st.text_input("Entrez votre clé API OpenAI", type="password")
 
-        # Saisie des prompts pour OpenAI
-        system_prompt = st.text_area("System prompt", value="You are a helpful assistant that generates product descriptions.")
-        user_prompt = st.text_area("User prompt", value="Rédige une description produit de 300 mots pour le titre suivant : {title}")
-
-        # Bouton pour générer les descriptions
         if st.button("Générer les descriptions"):
-            try:
-                # Mise à jour du dataframe avec les descriptions générées
-                df['Description'] = df[title_column].apply(lambda x: generate_description(x, system_prompt, user_prompt))
+            if api_key and selected_column:
+                with st.spinner("Génération en cours..."):
+                    updated_df = generate_descriptions(api_key, selected_column, df)
+                
+                st.success("Descriptions générées avec succès !")
+                st.write(updated_df)
 
-                # Affichage du dataframe mis à jour
-                st.write("Dataframe mis à jour :")
-                st.write(df)
-
-                # Option pour télécharger le dataframe modifié
-                def convert_df(df):
-                    return df.to_csv(index=False).encode('utf-8')
-
-                csv = convert_df(df)
-                st.download_button(label="Télécharger le fichier mis à jour", data=csv, file_name='fichier_mis_a_jour.csv', mime='text/csv')
-            except Exception as e:
-                st.error(f"Erreur lors de la génération des descriptions : {e}")
-
-# Appel de la fonction principale
-def main():
-    app()
-
-if __name__ == "__main__":
-    main()
+                # Option pour télécharger le fichier mis à jour
+                csv = updated_df.to_csv(index=False)
+                st.download_button("Télécharger le fichier mis à jour", csv, "updated_descriptions.csv", "text/csv")
+            else:
+                st.error("Veuillez entrer la clé API et sélectionner une colonne.")
